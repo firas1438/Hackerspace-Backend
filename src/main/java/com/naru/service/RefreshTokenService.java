@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.naru.entity.RefreshToken;
 import com.naru.entity.User;
 import com.naru.repository.RefreshTokenRepository;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
@@ -21,18 +23,14 @@ public class RefreshTokenService {
     private long refreshTokenExpiration;
 
     public RefreshToken createRefreshToken(String email) {
-
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // delete old refresh token if exists
-        refreshTokenRepository.deleteByUser(user);
+        RefreshToken refreshToken = refreshTokenRepository.findByUser(user)
+                .orElseGet(() -> RefreshToken.builder().user(user).build());
 
-        RefreshToken refreshToken = RefreshToken.builder()
-                .user(user)
-                .token(UUID.randomUUID().toString())
-                .expiryDate(Instant.now().plusMillis(refreshTokenExpiration))
-                .build();
+        refreshToken.setToken(UUID.randomUUID().toString());
+        refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenExpiration));
 
         return refreshTokenRepository.save(refreshToken);
     }
@@ -50,7 +48,6 @@ public class RefreshTokenService {
         return refreshToken;
     }
     
-    //logout
     public void deleteByToken(String token) {
         refreshTokenRepository.deleteByToken(token);
     }

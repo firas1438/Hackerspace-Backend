@@ -30,34 +30,45 @@ class JwtAuthFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 
-		String authHeader = request.getHeader("Authorization");
+		String token = extractToken(request);
 
-		if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-			filterChain.doFilter(request, response);
-			return;
-		}
+		if (token != null && jwtService.isTokenValid(token)) {
+			String username = jwtService.extractUsername(token);
 
-		String token = authHeader.substring(7);
-		String username = jwtService.extractUsername(token);
+			if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+				var userDetails = userDetailsService.loadUserByUsername(username);
 
-		if (username != null && SecurityContextHolder.getContext().getAuthentication() == null
-				&& jwtService.isTokenValid(token)) {
+				Claims claims = jwtService.extractAllClaims(token);
+				String role = claims.get("role", String.class);
 
-			var userDetails = userDetailsService.loadUserByUsername(username);
+				SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
 
-			Claims claims = jwtService.extractAllClaims(token);
-			String role = claims.get("role", String.class);
+				UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null,
+						 List.of(authority));
 
-			SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
+				authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-			UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null,
-					 List.of(authority));
-
-			authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-			SecurityContextHolder.getContext().setAuthentication(authToken);
+				SecurityContextHolder.getContext().setAuthentication(authToken);
+			}
 		}
 
 		filterChain.doFilter(request, response);
+	}
+
+	private String extractToken(HttpServletRequest request) {
+		if (request.getCookies() != null) {
+			for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+				if ("accessToken".equals(cookie.getName())) {
+					return cookie.getValue();
+				}
+			}
+		}
+
+		String authHeader = request.getHeader("Authorization");
+		if (authHeader != null && authHeader.startsWith("Bearer ")) {
+			return authHeader.substring(7);
+		}
+
+		return null;
 	}
 }
