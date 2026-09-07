@@ -3,6 +3,7 @@ package com.naru.security;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -28,6 +29,9 @@ public class SecurityConfig {
 				.csrf(csrf -> csrf.disable())
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/auth/**").permitAll()
+						.requestMatchers(HttpMethod.GET, "/events/mine").authenticated()
+						.requestMatchers(HttpMethod.GET, "/events", "/events/filters", "/events/{id}").permitAll()
+						.requestMatchers(HttpMethod.GET, "/cities").permitAll()
 						.requestMatchers("/admin/**").hasRole("ADMIN")
 						.requestMatchers("/user/**").hasRole("USER")
 						.anyRequest().authenticated())

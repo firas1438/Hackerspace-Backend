@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import com.naru.entity.User;
+import com.naru.enums.Role;
 import com.naru.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -22,7 +23,11 @@ public class CustomUserDetailsService implements UserDetailsService {
 		User user = userRepository.findByEmail(email)
 				.orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-		return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), 
-				List.of(new SimpleGrantedAuthority(user.getRole().name())));
+		String authority = user.getRole() != null ? user.getRole().name() : Role.ROLE_USER.name();
+
+		return new org.springframework.security.core.userdetails.User(
+				user.getEmail(),
+				user.getPassword(),
+				List.of(new SimpleGrantedAuthority(authority)));
 	}
 }

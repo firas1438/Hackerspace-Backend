@@ -35,4 +35,13 @@ public class User {
 
 	    @Enumerated(EnumType.STRING)
 	    private Role role;
+
+	    private String organizationName;
+
+	    @Column(columnDefinition = "TEXT")
+	    private String bio;
+
+	    private String logoUrl;
+
+	    private String website;
 }
