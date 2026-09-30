@@ -1,5 +1,6 @@
 package com.naru.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -35,10 +36,10 @@ public class AuthController {
 	private ResponseCookie createCookie(String name, String value, long maxAgeSeconds) {
 		return ResponseCookie.from(name, value)
 				.httpOnly(true)
-				.secure(false)
+				.secure(true)
 				.path("/")
 				.maxAge(maxAgeSeconds)
-				.sameSite("Lax")
+				.sameSite("None")
 				.build();
 	}
 
