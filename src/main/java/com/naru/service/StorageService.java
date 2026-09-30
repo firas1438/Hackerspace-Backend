@@ -29,11 +29,9 @@ public class StorageService {
 			"image/jpeg",
 			"image/jpg",
 			"image/png",
-			"image/webp"
-	);
+			"image/webp");
 	private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList(
-			"jpg", "jpeg", "png", "webp"
-	);
+			"jpg", "jpeg", "png", "webp");
 
 	private final S3Client s3Client;
 
@@ -42,6 +40,9 @@ public class StorageService {
 
 	@Value("${aws.s3.endpoint-url}")
 	private String endpointUrl;
+
+	@Value("${API_BASE_URL:http://localhost:8080}")
+	private String apiBaseUrl;
 
 	public String uploadImage(MultipartFile file) {
 		if (file == null || file.isEmpty()) {
@@ -74,8 +75,9 @@ public class StorageService {
 
 			s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(inputStream, file.getSize()));
 
-			// Return backend proxy URL so images load reliably across all environments without S3 ACL/CORS restrictions
-			return "http://localhost:8080/upload/files/" + key;
+			// Return backend proxy URL so images load reliably across all environments
+			// without S3 ACL/CORS restrictions
+			return apiBaseUrl + "/upload/files/" + key;
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to upload image to Object Storage: " + e.getMessage(), e);
 		}
