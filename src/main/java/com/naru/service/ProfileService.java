@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 public class ProfileService {
 
 	private final UserRepository userRepository;
+	private final StorageService storageService;
 
 	@Transactional(readOnly = true)
 	public ProfileResponse getProfile(Authentication authentication) {
@@ -28,7 +29,13 @@ public class ProfileService {
 		User user = requireUser(authentication);
 		user.setOrganizationName(blankToNull(request.getOrganizationName()));
 		user.setBio(blankToNull(request.getBio()));
-		user.setLogoUrl(blankToNull(request.getLogoUrl()));
+
+		String oldLogoUrl = user.getLogoUrl();
+		String newLogoUrl = blankToNull(request.getLogoUrl());
+		if (oldLogoUrl != null && !oldLogoUrl.isBlank() && !oldLogoUrl.equals(newLogoUrl)) {
+			storageService.deleteImage(oldLogoUrl);
+		}
+		user.setLogoUrl(newLogoUrl);
 		user.setWebsite(blankToNull(request.getWebsite()));
 		return toResponse(user);
 	}

@@ -38,6 +38,7 @@ public class EventService {
 
 	private final EventRepository eventRepository;
 	private final UserRepository userRepository;
+	private final StorageService storageService;
 
 	@Transactional(readOnly = true)
 	public EventPageResponse listEvents(
@@ -126,7 +127,14 @@ public class EventService {
 
 		assertCanMutate(event, authentication);
 		assertCanEdit(event);
+
+		String oldImageUrl = event.getImageUrl();
 		EventMapper.applyUpdate(event, request);
+		String newImageUrl = event.getImageUrl();
+
+		if (oldImageUrl != null && !oldImageUrl.isBlank() && !oldImageUrl.equals(newImageUrl)) {
+			storageService.deleteImage(oldImageUrl);
+		}
 
 		return EventMapper.toResponse(event);
 	}
@@ -137,7 +145,11 @@ public class EventService {
 				.orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
 		assertCanMutate(event, authentication);
+		String imageUrl = event.getImageUrl();
 		eventRepository.delete(event);
+		if (imageUrl != null && !imageUrl.isBlank()) {
+			storageService.deleteImage(imageUrl);
+		}
 	}
 
 	private void assertCanEdit(Event event) {
