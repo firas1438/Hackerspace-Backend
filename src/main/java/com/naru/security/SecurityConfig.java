@@ -32,12 +32,11 @@ public class SecurityConfig {
 				.cors(cors -> cors.configurationSource(corsConfigurationSource()))
 				.csrf(csrf -> csrf.disable())
 				.authorizeHttpRequests(auth -> auth
+						.requestMatchers("/health").permitAll()
 						.requestMatchers("/auth/**").permitAll()
 						.requestMatchers(HttpMethod.GET, "/events/mine").authenticated()
 						.requestMatchers(HttpMethod.GET, "/events", "/events/filters", "/events/{id}").permitAll()
 						.requestMatchers(HttpMethod.GET, "/cities", "/upload/files/**").permitAll()
-						.requestMatchers("/admin/**").hasRole("ADMIN")
-						.requestMatchers("/user/**").hasRole("USER")
 						.anyRequest().authenticated())
 				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
