@@ -4,5 +4,6 @@ public enum EventType {
 	HACKATHON,
 	COMPETITION,
 	WORKSHOP,
+	BOOTCAMP,
 	CONFERENCE
 }
